@@ -7,6 +7,9 @@ Color RGB led in Arduino:
    * Red: Not Connected / Connecting
    * Green: Connected to Wifi. & No clients connected
    * Blue: Client Connected.
+   
+Installing instructions:
+https://github.com/aeracoop/RFID-Detector/wiki
 
 Arduino requred Libraries:
 * Sparkfun RFID
