@@ -6,7 +6,7 @@
  Don't forget to activate Permissions: INTERNET, WRITE_EXTERNAL_STORAGE
  
  The file with the RFIOD tags in Android is saved in 
- /storage/emulated/0/RFIDXXXX.ttxt
+ /storage/emulated/0/RFIDXXXX.txt
  */
 
 import controlP5.*;
@@ -16,7 +16,7 @@ UDP udp;
 
 int localPort = 6000;
 int remotePort = 12000;
-String remoteIp       = "192.168.0.197";  // the remote IP address
+String remoteIp       = "255.255.255.255";  // the remote IP address
 
 int dd = 3; //Display Density
 //int dd = displayDensity; //Display Density
@@ -25,6 +25,7 @@ int w = 540;//1080
 int h = 960;//1920
 
 PImage logo; 
+PFont font; 
 boolean welcome = true;
 boolean connected = false;
 boolean running = false;
@@ -32,9 +33,10 @@ boolean saved = false;
 int startTime;
 int stopTime;
 
-Button bNext;
-Button bStart;
-Button bSave;
+Btn bNext;
+Btn bStart;
+Btn bSave;
+
 Textarea terminal;
 Println console;
 Scan scan;
@@ -47,8 +49,7 @@ void setup() {
 
   w = width;
   h = height;
-  PFont font = createFont("SansSerif", 20 * dd);
-  ControlFont cfont = new ControlFont(font, 240);
+  font = createFont("SansSerif", 20 * dd);
   cp5 = new ControlP5(this);
   udp = new UDP( this, localPort );
   scan = new Scan();
@@ -59,27 +60,14 @@ void setup() {
   textFont(font);
   textAlign(CENTER, CENTER);
 
-  bNext = cp5.addButton("Comenzar")
-    .setFont(font)
-    .setPosition((w/3)-120, 4.5*(h/10))
-    .setSize((w/2)+40, h/10);
-
-  bStart = cp5.addButton("Iniciar")
-    .setFont(font)
-    .setPosition((w/3)-120, (h/10))
-    .setSize((w/2)+40, h/10)
-    .hide();
-
-  bSave = cp5.addButton("Guardar")
-    .setFont(font)
-    .setPosition((w/3)-120, 8*(h/10))
-    .setSize((w/2)+40, h/10)
-    .hide();
+  bNext = new Btn(int((w/3)-120), int( 4.5*(h/10)), "Comenzar");
+  bStart = new Btn(int((w/3)-120), int(h/10), "Iniciar");
+  bSave = new Btn(int((w/3)-120), int(8*(h/10)), "Guardar");
 
   terminal = cp5.addTextarea("txt")
     //.setFont(font,20)
-    .setPosition((w/3)-120, 3*(h/10))
-    .setSize((w/2)+40, 3*(h/10))
+    .setPosition((w/3)-250, 3*(h/10))
+    .setSize((w/2)+300, 3*(h/10))
     .setFont(createFont("", 60))
     .setLineHeight(70)
     .setColor(color(0))
@@ -98,25 +86,27 @@ void draw() {
 }
 
 public void receiverScreen() {
-  textSize(12 * dd);
+  textSize(18 * dd);
+  bStart.draw();
+  bSave.draw();
   if (connected) {
     tint(0, 255, 0, 255);
-    image(logo, w/2, h/4, 150, 150);    
+    image(logo, w/2, h/18, 150, 150);    
     fill(0, 250, 0);
-    text("Conectado", w/3, (h/4));
+    text("Conectado", (w/3), (h/4));
     fill(0);
     if (running)
       text(getElapsedTimeString(), 2*(w/3), (h/4));
   } else {
     tint(255, 0, 0, 128);
-    image(logo, w/2, h/4, 150, 150);
+    image(logo, w/2, h/18, 150, 150);
     fill(250, 0, 0);
     text("NO Conectado", w/3, (h/4));   
     fill(0);
   }
   tint(255);
   textSize(20 * dd);
-  text("Tags detectados:" + scan.items(), w/2, 8*(h/10));
+  text("Tags detectados:" + scan.items(), w/2, 7*(h/10));
 
   if (saved) {
     textSize(12 * dd);
@@ -126,31 +116,28 @@ public void receiverScreen() {
 
   if (!connected) {
     sendConnect();
-    //delay(100);
   }
 }
 
 public void welcomeScreen() {
   image(logo, w/2, h/4);
   text("Gracias por utilizar este software.", w/2, 2*(h/3));
+  bNext.draw();
 }
 
-public void controlEvent(ControlEvent theEvent) {
-  //println(theEvent.getController().getName());
-  /*  String str1 = theEvent.getController().getName();
-   String str2 = "Iniciar Scanner";*/
-  /* if (str1.equals(str2) == true) {
-   welcome = false;
-   }*/
+void mousePressed() {
+  if (bNext.isPressed()) 
+    comenzar();
+  if (bStart.isPressed()) 
+    iniciar();
+  if (bSave.isPressed()) 
+    guardar();
 }
 
 //Boton comenzar
-public void Comenzar(int theValue) {
+public void comenzar() {
   sendConnect();
   welcome = false;
-  bNext.hide();
-  bStart.show();
-  bSave.show();
   terminal.show();
   console.clear();
 }
@@ -160,7 +147,7 @@ public void sendConnect() {
   udp.send( message, remoteIp, remotePort );  // send the message
 }
 
-public void Iniciar(int theValue) {
+public void iniciar() {
   if (connected) {
     if (running)
       stopScan();
@@ -169,7 +156,7 @@ public void Iniciar(int theValue) {
   }
 }
 
-public void Guardar(int theValue) {
+public void guardar() {
   stopScan();
   scan.save();
   console.clear();
@@ -196,6 +183,7 @@ public void stopScan() {
  */
 void receive( byte[] data, String ip, int port ) {  // <-- extended handler
   String msg = new String(data);
+  //println( "Received: \""+msg+"\" from "+ip+" on port "+port );
   if (msg.equals("Connected") == true) {
     connected = true;
   } else
